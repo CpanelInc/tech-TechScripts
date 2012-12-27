@@ -1,8 +1,6 @@
 #!/bin/bash
 # Get nameservers for a domain name from the TLD servers.
 # Also get the GLUE records if they exist.
-# Todo:
-#	nameserver names without dot
 #
 
 # Get input, initial variables
