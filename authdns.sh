@@ -3,6 +3,9 @@
 # Also get the GLUE records if they exist.
 #
 
+# Check for dig commannd
+command -v dig >/dev/null 2>&1 || { echo >&2 "How can I look up domain servers without dig?  Please install the dig command on this system. Aborting."; exit 1; }
+
 # Get input, initial variables
 dom=${1}
 tld=${dom#*.}
