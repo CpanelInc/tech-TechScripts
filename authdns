@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Get nameservers for a domain name from the TLD servers.
 # Also get the GLUE records if they exist.
 #
@@ -30,7 +30,8 @@ set_colors() {
 
        # Linux
        else
-       greenbold='\E[32;1m'
+       #greenbold='\E[32;1m'
+       greenbold='\033[1;32m'
     fi;
     clroff="\033[0m";
 }
@@ -54,17 +55,23 @@ get_nameserver_ips() {
 }
 
 print_results() {
-	echo -e $greenbold"\n# dig NS ${tld}. +short | head -n1"$clroff
-	echo $tld_server
-	echo -e $greenbold"\n# "$dig_oneliner$clroff
-	echo -e "${dig_result}\n"
-	echo -e $greenbold"Nameserver Names: \n"$clroff"${auth_ns}\n"
-	echo -e $greenbold"Nameserver IP's: \n"$clroff"${bare_result}\n"
+    printf "%b\n" "${greenbold}\n# dig NS ${tld}. +short | head -n1${clroff}"
+    printf "%b\n" "$tld_server"
+    printf "%b\n" "${greenbold}\n# ${dig_oneliner}${clroff}"
+    printf "%b\n" "${dig_result}\n"
+    printf "%b\n" "${greenbold}Nameserver Names:\n${clroff}${auth_ns}\n"
+    printf "%b\n" "${greenbold}Nameserver IPs:\n${clroff}${bare_result}\n"
+#	echo -e $greenbold"\n# dig NS ${tld}. +short | head -n1"$clroff
+#	echo $tld_server
+#	echo -e $greenbold"\n# "$dig_oneliner$clroff
+#	echo -e "${dig_result}\n"
+#	echo -e $greenbold"Nameserver Names: \n"$clroff"${auth_ns}\n"
+#	echo -e $greenbold"Nameserver IP's: \n"$clroff"${bare_result}\n"
 }
 
 
 # Check input, run code
-if [ -z ${1} ]; then
+if [ -z ${dom} ]; then
 echo 'Please specify a domain.'
 else
 	create_dig_oneliner
