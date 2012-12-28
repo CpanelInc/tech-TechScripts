@@ -3,6 +3,9 @@
 # Also get the GLUE records if they exist.
 #
 
+# Check for dig commannd
+command -v dig >/dev/null 2>&1 || { echo >&2 "Oops! The dig command is necessary for this script, but was not found on this system :(  Aborting."; exit 1; }
+
 # Get input, initial variables
 dom=${1}
 tld=${dom#*.}
@@ -21,7 +24,7 @@ get_result() {
 set_colors() {
     # Colors and formatting
     # Mac
-    if [ "`uname`" == "Darwin" ];
+    if [ "`uname`" = "Darwin" ];
        then
        greenbold='\033[0;32m'
 
@@ -34,7 +37,7 @@ set_colors() {
 
 get_nameservers() {
 	# nameserver names and possibly IP's from TLD servers
-	auth_ns=`${dig_oneliner} | awk '/AUTHORITY SECTION/,/^[ ]*$/' | awk '{print $NF}' | sed 1d | sed 's/.$//'`
+	auth_ns=`${dig_oneliner} | awk '/AUTHORITY SECTION/,/^[ ]*$/' | awk '{print $NF}' | sed -e 1d -e 's/.$//'`
 	additional_ips=`${dig_oneliner} | awk '/ADDITIONAL SECTION/,0' | awk '{print $NF}' | sed 1d`
 }
 
