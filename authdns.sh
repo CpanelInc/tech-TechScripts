@@ -1,10 +1,19 @@
-#!/bin/bash
+#!/bin/sh
 # Get nameservers for a domain name from the TLD servers.
 # Also get the GLUE records if they exist.
 #
 
 # Check for dig commannd
-command -v dig >/dev/null 2>&1 || { echo >&2 "How can I look up domain servers without dig?  Please install the dig command on this system. Aborting."; exit 1; }
+verify_tools() {
+    command -v dig >/dev/null 2>&1 || { echo >&2 "Oops! The dig command is necessary for this script, but was not found on this system :(  Aborting."; exit 1; }
+}
+
+# Check input
+check_input() {
+    if [ -z ${dom} ]; then
+        echo 'Please specify a domain.'; exit 1;
+    fi
+}
 
 # Get input, initial variables
 dom=${1}
@@ -23,21 +32,13 @@ get_result() {
 
 set_colors() {
     # Colors and formatting
-    # Mac
-    if [ "`uname`" == "Darwin" ];
-       then
-       greenbold='\033[0;32m'
-
-       # Linux
-       else
-       greenbold='\E[32;1m'
-    fi;
+    greenbold='\033[1;32m'
     clroff="\033[0m";
 }
 
 get_nameservers() {
 	# nameserver names and possibly IP's from TLD servers
-	auth_ns=`${dig_oneliner} | awk '/AUTHORITY SECTION/,/^[ ]*$/' | awk '{print $NF}' | sed 1d | sed 's/.$//'`
+	auth_ns=`${dig_oneliner} | awk '/AUTHORITY SECTION/,/^[ ]*$/' | awk '{print $NF}' | sed -e 1d -e 's/.$//'`
 	additional_ips=`${dig_oneliner} | awk '/ADDITIONAL SECTION/,0' | awk '{print $NF}' | sed 1d`
 }
 
@@ -54,23 +55,22 @@ get_nameserver_ips() {
 }
 
 print_results() {
-	echo -e $greenbold"\n# dig NS ${tld}. +short | head -n1"$clroff
-	echo $tld_server
-	echo -e $greenbold"\n# "$dig_oneliner$clroff
-	echo -e "${dig_result}\n"
-	echo -e $greenbold"Nameserver Names: \n"$clroff"${auth_ns}\n"
-	echo -e $greenbold"Nameserver IP's: \n"$clroff"${bare_result}\n"
+    printf "%b\n" "${greenbold}\n# dig NS ${tld}. +short | head -n1${clroff}"
+    printf "%b\n" "$tld_server"
+    printf "%b\n" "${greenbold}\n# ${dig_oneliner}${clroff}"
+    printf "%b\n" "${dig_result}\n"
+    printf "%b\n" "${greenbold}Nameserver Names:\n${clroff}${auth_ns}\n"
+    printf "%b\n" "${greenbold}Nameserver IPs:\n${clroff}${bare_result}\n"
 }
 
 
-# Check input, run code
-if [ -z ${1} ]; then
-echo 'Please specify a domain.'
-else
-	create_dig_oneliner
-	get_result
-	set_colors
-	get_nameservers
-	get_nameserver_ips
-	print_results
-fi
+
+# Run code
+verify_tools
+check_input
+create_dig_oneliner
+get_result
+set_colors
+get_nameservers
+get_nameserver_ips
+print_results
