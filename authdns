@@ -1,6 +1,7 @@
 #!/bin/sh
 # Get nameservers for a domain name from the TLD servers.
 # Also get the GLUE records if they exist.
+# If glue records do not exist, find them manually.
 #
 
 # Check for dig commannd
@@ -49,7 +50,7 @@ get_nameserver_ips() {
 		else bare_result=`
 			for auth_ips in "${auth_ns[@]}"; do
 				dig +short $auth_ips
-				echo "(IP's resolved, not from TLD record)"
+				echo "(Warning: these IP's had to be resolved manually, so glue records are bad)"
 			done;`
 	fi;
 }
@@ -59,8 +60,8 @@ print_results() {
     printf "%b\n" "$tld_server"
     printf "%b\n" "${greenbold}\n# ${dig_oneliner}${clroff}"
     printf "%b\n" "${dig_result}\n"
-    printf "%b\n" "${greenbold}Nameserver Names:\n${clroff}${auth_ns}\n"
-    printf "%b\n" "${greenbold}Nameserver IPs:\n${clroff}${bare_result}\n"
+    printf "%b\n" "${greenbold}authoritative nameserver names:\n${clroff}${auth_ns}\n"
+    printf "%b\n" "${greenbold}authoritative nameserver IPs:\n${clroff}${bare_result}\n"
 }
 
 
