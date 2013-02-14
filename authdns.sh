@@ -3,6 +3,10 @@
 # Also get the GLUE records if they exist.
 # If glue records do not exist, find them manually.
 #
+# Todo: check for two part tlds, like .xx.co or .com.br
+#  maybe, use two for any domain with 3 parts?
+# Todo#2: check for responses from all the auth ns's, instead of just the top one
+
 
 # Check for dig commannd
 verify_tools() {
