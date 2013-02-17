@@ -2,8 +2,10 @@
 # Get nameservers for a domain name from the TLD servers.
 # Also get the GLUE records if they exist.
 # If glue records do not exist, find them manually.
+
+# This script is meant to be run from the local Desktop as a quick reference.
 #
-# Todo: check for two part tlds, like .xx.co or .com.br
+# Todo: check for two-part tlds, like .xx.co or .com.br (3753229)
 #  maybe, use two for any domain with 3 parts?
 # Todo#2: check for responses from all the auth ns's, instead of just the top one
 

@@ -3,7 +3,16 @@
 # Also get the GLUE records if they exist.
 # If glue records do not exist, find them manually.
 #
-# Todo: check for two part tlds, like .xx.co or .com.br
+# This script is meant to be run from the local Desktop as a quick reference.
+# 
+# Description:
+# https://staffwiki.cpanel.net/LinuxSupport/GuideToDns#Bash_script_to_show_authoritative_nameservers_and_GLUE_records
+# 
+# How to download and use:
+# curl -O https://raw.github.com/cPanelTechs/TechScripts/master/authdns.sh > authdns.sh; chmod u+x authdns.sh
+# ./authdns.sh cpanel.net
+#
+# Todo: check for two-part tlds, like .xx.co or .com.br (3753229)
 #  maybe, use two for any domain with 3 parts?
 # Todo#2: check for responses from all the auth ns's, instead of just the top one
 
