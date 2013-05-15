@@ -13,7 +13,7 @@
 # ./authdns.sh cpanel.net
 #
 # Todo: check for two-part tlds, like .xx.co or .com.br (3753229)
-#  maybe, use two for any domain with 3 parts?
+# need to check if 2nd to last is legit tld, then run it.
 # http://stackoverflow.com/questions/14460680/how-to-get-a-list-of-tlds-using-bash-for-building-a-regex
 # http://data.iana.org/TLD/tlds-alpha-by-domain.txt
 # http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1
@@ -50,32 +50,24 @@ options="+noall +authority +additional +comments"
 multi_check_done=0
 
 # Functions
-check_multi_dom_suffixes() {
-num_parts=$(echo $dom | awk -F"." '{print NF}')
-if [ $num_parts > 2 ]; then
-    debug "Starting multi part domain check"
-    regex=$(curl -s http://data.iana.org/TLD/tlds-alpha-by-domain.txt | sed '1d; s/^ *//; s/ *$//; /^$/d' | awk '{print length" "$0}' | sort -rn | cut -d' ' -f2- | tr '[:upper:]' '[:lower:]' | awk '{print "^"$0"$"}' | tr '\n' '|' | sed 's/\|$//')
-    for (( part_count=1; part_count<=$num_parts; part_count++ )); do
-         part=$(echo $dom | cut -d. -f$part_count);
-         is_multi_part=$(echo $part | awk -v reg=$regex '$0~reg');
-         if [ "$is_multi_part" ]; then 
-             debug "${is_multi_part}; first_part=${part_count}"; 
-             break; 
-             fi; 
-         debug "first part is "$first_part;
-    done;
-    tld=$(echo $dom | egrep -o "$is_multi_part.*");
-    multi_check_done=1
-    debug "multicheck is done.  the new tld is $tld"
-fi
+try_sec_level_domain() {
+    num_parts=$(echo $dom | awk -F"." '{print NF}')
+    if [ $num_parts > 2 ]; then
+        debug "Starting multi part domain check"
+        regex=$(curl -s http://data.iana.org/TLD/tlds-alpha-by-domain.txt | sed '1d; s/^ *//; s/ *$//; /^$/d' | awk '{print length" "$0}' | sort -rn | cut -d' ' -f2- | tr '[:upper:]' '[:lower:]' | awk '{print "^"$0"$"}' | tr '\n' '|' | sed 's/\|$//')
+        let sec_lev_tld_pos=$num_parts-1
+        debug "sec_lev_tld_pos is $sec_lev_tld_pos, num_parts is $num_parts"
+        sec_lev_tld=$(echo $dom | cut -d. -f$sec_lev_tld_pos)
+        debug "sec_lev_tld is $sec_lev_tld"
+        is_legit=$(echo $sec_lev_tld | awk -v reg=$regex '$0~reg');
+        if [ "$is_legit" ]; then tld=$(echo $dom | cut -d. -f$sec_lev_tld_pos,$num_parts); fi 
+        multi_check_done=1
+        debug "multicheck is done.  the new tld is $tld"
+    fi
 }
 
 create_dig_oneliner() {
 	tld_server=$(dig NS ${tld}. +short | head -n1)
-#    if [ ! "$tld_server" ]; then
-#        check_multi_dom_suffixes
-#        tld_server=$(dig NS ${tld}. +short | head -n1)
-#    fi
 	dig_oneliner="dig @${tld_server} ${dom}. ${options}"
 }
 
@@ -98,7 +90,7 @@ get_nameservers() {
     debug "ns_check_ip is ${ns_check_ip}"
     debug "ns_check_name is ${ns_check_name}"
     if [ ! "$ns_check_name" -a ! "$ns_check_ip" -a $multi_check_done -lt 1 ]; then
-        check_multi_dom_suffixes
+        try_sec_level_domain
         create_dig_oneliner
         get_result
         get_nameservers
