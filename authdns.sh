@@ -14,8 +14,20 @@
 #
 # Todo: check for two-part tlds, like .xx.co or .com.br (3753229)
 #  maybe, use two for any domain with 3 parts?
+# http://stackoverflow.com/questions/14460680/how-to-get-a-list-of-tlds-using-bash-for-building-a-regex
+# http://data.iana.org/TLD/tlds-alpha-by-domain.txt
+# http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1
+#
 # Todo#2: check for responses from all the auth ns's, instead of just the top one
 
+function debug() {
+     debug="off"
+      if [ "$debug" = "on" ]; then
+            echo $1
+             fi
+}
+# example:
+# debug "variable_name is ${variable_name}"
 
 # Check for dig commannd
 verify_tools() {
@@ -31,12 +43,39 @@ check_input() {
 
 # Get input, initial variables
 dom=${1}
-tld=${dom#*.}
+#tld=${dom#*.}
+tld=$(echo $dom | awk -F. '{print $NF}')
+debug "tld is ${tld}"
 options="+noall +authority +additional +comments"
+multi_check_done=0
 
 # Functions
+check_multi_dom_suffixes() {
+num_parts=$(echo $dom | awk -F"." '{print NF}')
+if [ $num_parts > 2 ]; then
+    debug "Starting multi part domain check"
+    regex=$(curl -s http://data.iana.org/TLD/tlds-alpha-by-domain.txt | sed '1d; s/^ *//; s/ *$//; /^$/d' | awk '{print length" "$0}' | sort -rn | cut -d' ' -f2- | tr '[:upper:]' '[:lower:]' | awk '{print "^"$0"$"}' | tr '\n' '|' | sed 's/\|$//')
+    for (( part_count=1; part_count<=$num_parts; part_count++ )); do
+         part=$(echo $dom | cut -d. -f$part_count);
+         is_multi_part=$(echo $part | awk -v reg=$regex '$0~reg');
+         if [ "$is_multi_part" ]; then 
+             debug "${is_multi_part}; first_part=${part_count}"; 
+             break; 
+             fi; 
+         debug "first part is "$first_part;
+    done;
+    tld=$(echo $dom | egrep -o "$is_multi_part.*");
+    multi_check_done=1
+    debug "multicheck is done.  the new tld is $tld"
+fi
+}
+
 create_dig_oneliner() {
-	tld_server=`dig NS ${tld}. +short | head -n1`
+	tld_server=$(dig NS ${tld}. +short | head -n1)
+#    if [ ! "$tld_server" ]; then
+#        check_multi_dom_suffixes
+#        tld_server=$(dig NS ${tld}. +short | head -n1)
+#    fi
 	dig_oneliner="dig @${tld_server} ${dom}. ${options}"
 }
 
@@ -52,8 +91,19 @@ set_colors() {
 
 get_nameservers() {
 	# nameserver names and possibly IP's from TLD servers
-	auth_ns=`${dig_oneliner} | awk '/AUTHORITY SECTION/,/^[ ]*$/' | awk '{print $NF}' | sed -e 1d -e 's/.$//'`
-	additional_ips=`${dig_oneliner} | awk '/ADDITIONAL SECTION/,0' | awk '{print $NF}' | sed 1d`
+	auth_ns=$(${dig_oneliner} | awk '/AUTHORITY SECTION/,/^[ ]*$/' | awk '{print $NF}' | sed -e 1d -e 's/.$//')
+    debug "auth_ns is ${auth_ns} multi_check_done is $multi_check_done"
+    ns_check_ip=$(echo $auth_ns | egrep '([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}')
+    ns_check_name=$(echo $auth_ns | egrep [a-zA-Z])
+    debug "ns_check_ip is ${ns_check_ip}"
+    debug "ns_check_name is ${ns_check_name}"
+    if [ ! "$ns_check_name" -a ! "$ns_check_ip" -a $multi_check_done -lt 1 ]; then
+        check_multi_dom_suffixes
+        create_dig_oneliner
+        get_result
+        get_nameservers
+    fi
+	additional_ips=$(${dig_oneliner} | awk '/ADDITIONAL SECTION/,0' | awk '{print $NF}' | sed 1d)
 }
 
 get_nameserver_ips() {
@@ -82,6 +132,8 @@ print_results() {
 # Run code
 verify_tools
 check_input
+# This is called inside a diff function:
+# check_multi_dom_suffixes
 create_dig_oneliner
 get_result
 set_colors
