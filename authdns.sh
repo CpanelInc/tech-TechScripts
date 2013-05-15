@@ -132,8 +132,6 @@ print_results() {
 # Run code
 verify_tools
 check_input
-# This is called inside a diff function:
-# check_multi_dom_suffixes
 create_dig_oneliner
 get_result
 set_colors
