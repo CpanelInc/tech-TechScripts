@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+eval { local $SIG{__DIE__}; local $SIG{__WARN__}; require Term::ReadKey; };
+
+our $VERSION = '1.1';
+
+print "cPanel File Downloader v$VERSION.\n";
+print "Please place the file in ~USER/ on the server\n";
+print "Example: Put test.txt in /home/cptkt3806761_nick/test.txt\n";
+print "** Make sure that cptkt3806761_nick can read the file as no error will be given **\n";
+print "\n";
+
+my $host;
+while ( !length $host || $host !~ m/\./ ) {
+    print "Enter hostname or ip of server? ";
+    $host = <>;
+    chomp($host);
+}
+
+my $user;
+while ( !length $user ) {
+    print "Enter username? ";
+    $user = <>;
+    chomp($user);
+}
+
+my $pass;
+while ( !length $pass ) {
+    print "Enter password? ";
+    Term::ReadKey::ReadMode('noecho') if $INC{'Term/ReadKey.pm'};
+    $pass = <>;
+    chomp($pass);
+    Term::ReadKey::ReadMode('normal') if $INC{'Term/ReadKey.pm'};
+    print "\n";
+}
+
+my $file;
+while ( !length $file ) {
+    print "Enter filename? ";
+    $file = <>;
+    chomp($file);
+}
+
+my @cmd = ( 'curl', '-k', '-u', "$user:XXXXXXX", '-o', $file, "https://$host:2083/download/$file" );
+
+print "Running @cmd\n";
+
+system( 'curl', '-k', '-u', "$user:$pass", '-o', $file, "https://$host:2083/download/$file" );
