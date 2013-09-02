@@ -15,19 +15,21 @@ backlogdir=/usr/local/cpanel/logs/cpbackup;
 function check_new_backups() {
  echo -e "\n\n\033[36m[ cPTech Backup Report v1.0 ]\033[0m";
  new_enabled=$(grep BACKUPENABLE /var/cpanel/backups/config 2>/dev/null | awk -F"'" '{print $2}')
+ new_cron=$(crontab -l | grep bin\/backup | awk '{print $1,$2,$3,$4,$5}')
  if [ "$new_enabled" = "yes" ]; then new_status='\033[1;32m'Enabled'\033[0m'
  else new_status='\033[1;31m'Disabled'\033[0m'
  fi
- echo -e "New Backups = $new_status"
+ echo -e "New Backups = $new_status\t\t(cron time: $new_cron)"
 }
 
 # check if legacy or new backups are enabled.  if each one is, then show how many users are skipped
 function check_legacy_backups() {
  legacy_enabled=$(grep BACKUPENABLE /etc/cpbackup.conf | awk '{print $2'})
+ legacy_cron=$(crontab -l | grep cpbackup | awk '{print $1,$2,$3,$4,$5}')
  if [ $legacy_enabled = "yes" ]; then legacy_status='\033[1;32m'Enabled'\033[0m'
  else legacy_status='\033[1;31m'Disabled'\033[0m'
  fi
- echo -e "Legacy Backups = $legacy_status";
+ echo -e "Legacy Backups = $legacy_status\t(cron time: $legacy_cron)"
 }
 
 # look at start, end times.  print number of users where backup was attempted
