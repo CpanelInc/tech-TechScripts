@@ -80,7 +80,7 @@ function count_local_new_backups() {
 echo -e "\n\033[36m[ A count of the backup files on local disk currently ]\033[0m";
 new_backup_dir=$(awk '/BACKUPDIR/ {print $2}' /var/cpanel/backups/config 2>/dev/null)
 if [ -n "$new_backup_dir" ]; then
- number_new_backups=$(\ls $new_backup_dir/*/accounts/ 2>/dev/null | wc -l)
+ number_new_backups=$(\ls /backup/*/accounts 2>/dev/null | egrep -v ":$" | awk NF | wc -l)
  echo -e "New backups in $new_backup_dir/*/accounts: "$number_new_backups
 else echo "0 - No new backup directory configured"
 fi
