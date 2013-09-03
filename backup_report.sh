@@ -63,13 +63,14 @@ if [ $legacy_enabled == "yes" ]; then
  if [ -n "$skip_file_ct" ]; then echo -e "\nExtra Information: This skip file should no longer be used\n"$skip_file_ct; fi
 elif [ $legacy_users -gt 0 -a $legacy_status == "Disabled" ]; then
  echo -e "\nExtra Information: Legacy Backups aren't enabled, but there are $legacy_users users ready to use them."
+echo
 fi
 }
 
 function list_new_exceptions() {
 if [ "$new_enabled" == "yes" ]; then
  newxs=$(egrep "BACKUP=0" /var/cpanel/users/* | grep ":BACK" | wc -l);
- echo -e "\nNew Backups exceptions: $newxs";
+ echo -e "New Backups exceptions: $newxs";
  newen=$(egrep "BACKUP=1" /var/cpanel/users/* | grep ":BACK" | wc -l);
  echo -e "New Backup users enabled: "$newen
 fi
