@@ -19,7 +19,7 @@ function check_new_backups() {
  if [ "$new_enabled" = "yes" ]; then new_status='\033[1;32m'Enabled'\033[0m'
  else new_status='\033[1;31m'Disabled'\033[0m'
  fi
- echo -e "New Backups = $new_status\t\t(cron time: $new_cron)"
+ echo -e "New Backups = $new_status\t\t(cron time: $new_cron)\t\t/var/cpanel/backups/config"
 }
 
 # check if legacy or new backups are enabled.  if each one is, then show how many users are skipped
@@ -29,7 +29,7 @@ function check_legacy_backups() {
  if [ $legacy_enabled = "yes" ]; then legacy_status='\033[1;32m'Enabled'\033[0m'
  else legacy_status='\033[1;31m'Disabled'\033[0m'
  fi
- echo -e "Legacy Backups = $legacy_status\t(cron time: $legacy_cron)"
+ echo -e "Legacy Backups = $legacy_status\t(cron time: $legacy_cron)\t\t/etc/cpbackup.conf"
 }
 
 # look at start, end times.  print number of users where backup was attempted
