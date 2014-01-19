@@ -13,7 +13,7 @@ backlogdir=/usr/local/cpanel/logs/cpbackup;
 
 # check if new backups are enabled
 function check_new_backups() {
- echo -e "\n\n\033[36m[ cPTech Backup Report v1.0 ]\033[0m";
+ echo -e "\n\n\033[36m[ cPTech Backup Report v1.1 ]\033[0m";
  new_enabled=$(grep BACKUPENABLE /var/cpanel/backups/config 2>/dev/null | awk -F"'" '{print $2}')
  new_cron=$(crontab -l | grep bin\/backup | awk '{print $1,$2,$3,$4,$5}')
  if [ "$new_enabled" = "yes" ]; then new_status='\033[1;32m'Enabled'\033[0m'
@@ -95,6 +95,15 @@ for freq in daily weekly monthly; do
 done
 }
 
+function show_recent_errors() {
+    echo -e "\n\033[36m[ Count of Recent Errors ]\033[0m";
+    for i in `\ls $backlogdir`; do 
+        echo -n $backlogdir"/"$i" Ended "; 
+        \ls -lrth $backlogdir | grep $i | awk '{print $6" "$7" "$8}'; 
+        \egrep -i "failed|error|load to go down" $backlogdir/$i | cut -c -180 | sort | uniq -c ;
+    done | tail;
+}
+
 # Run all functions
 check_new_backups
 check_legacy_backups
@@ -104,4 +113,5 @@ list_legacy_exceptions
 list_new_exceptions
 count_local_new_backups
 count_local_legacy_backups
+show_recent_errors
 echo; echo
