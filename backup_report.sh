@@ -96,12 +96,16 @@ done
 }
 
 function show_recent_errors() {
+    # Errors from backup log directory
     echo -e "\n\033[36m[ Count of Recent Errors ]\033[0m";
     for i in `\ls $backlogdir`; do 
         echo -n $backlogdir"/"$i" Ended "; 
         \ls -lrth $backlogdir | grep $i | awk '{print $6" "$7" "$8}'; 
         \egrep -i "failed|error|load to go down" $backlogdir/$i | cut -c -180 | sort | uniq -c ;
     done | tail;
+    # Errors from cPanel error log
+    echo -e "\n/usr/local/cpanel/logs/error_log:"
+    egrep "(warn|die|panic) \[backup" /usr/local/cpanel/logs/error_log | awk '{printf $1"] "; for (i=4;i<=20;i=i+1) {printf $i" "}; print ""}' | uniq -c | tail -2
 }
 
 # Run all functions
