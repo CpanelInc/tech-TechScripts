@@ -14,7 +14,7 @@ sub debug {
     my $debug_toggle = "no";
     if(defined $debug_toggle){
         if ($debug_toggle eq "yes") {
-            # silences a stupid warning
+            # silences a warning
             #if($_[1]){ 
                 print "(debug) @_\n"; 
             #} 
