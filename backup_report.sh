@@ -105,7 +105,7 @@ function show_recent_errors() {
     done | tail;
     # Errors from cPanel error log
     echo -e "\n/usr/local/cpanel/logs/error_log:"
-    egrep "(warn|die|panic) \[backup" /usr/local/cpanel/logs/error_log | awk '{printf $1"] "; for (i=4;i<=20;i=i+1) {printf $i" "}; print ""}' | uniq -c | tail -2
+    egrep "(warn|die|panic) \[backup" /usr/local/cpanel/logs/error_log | awk '{printf $1"] "; for (i=4;i<=20;i=i+1) {printf $i" "}; print ""}' | uniq -c | tail -3
 }
 
 # Run all functions
