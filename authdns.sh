@@ -128,5 +128,6 @@ create_dig_oneliner
 get_result
 set_colors
 get_nameservers
+# get_nameservers also includes a check that tries 2nd level domains
 get_nameserver_ips
 print_results

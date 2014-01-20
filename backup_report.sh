@@ -101,7 +101,7 @@ function show_recent_errors() {
     for i in `\ls $backlogdir`; do 
         echo -n $backlogdir"/"$i" Ended "; 
         \ls -lrth $backlogdir | grep $i | awk '{print $6" "$7" "$8}'; 
-        \egrep -i "failed|error|load to go down" $backlogdir/$i | cut -c -180 | sort | uniq -c ;
+        \egrep -i "failed|error|load to go down|Unable" $backlogdir/$i | cut -c -180 | sort | uniq -c ;
     done | tail;
     # Errors from cPanel error log
     echo -e "\n/usr/local/cpanel/logs/error_log:"
