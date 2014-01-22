@@ -32,8 +32,9 @@ my $curdate;
 my $duration;
 my $duration_min;
 my $duration_reported;
-my $verbose=0;
+my $verbose=1;
 my $regex;
+my $regex2;
 
 # Set search time for 'system too slow' check
 # IDK why this didn't work:
@@ -108,6 +109,7 @@ while (@lines) {
 
     # Regex for errors
     $regex='Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second';
+    $regex2='second';
 
     # These are usually trash lines
     if ($line !~ /$regex/ && $line =~ /:-]/){
@@ -120,13 +122,17 @@ while (@lines) {
         &debug ("num fields is ", scalar(@array_fields));
         if (scalar(@array_fields) > 0){
             foreach (@array_fields) {
-                if (/:-]/) {
+                if ( ($_=~/$regex2/) ) {
+                    print "[$curdate] $_";
+                }
+                if ( ($_=~/:-]/) ) {
                     print "[$curdate] $_\n";
                 }
                 # More verbose output for broken lines
-                elsif ( ($verbose==1) && ($_=~/$regex/) ){
+                elsif ( ($verbose==1) && ($_=~/$regex/) && ($_!~/$regex2/) ){
                     chomp($_);
-                    print "[$curdate] ... $_\n";
+                    #print "[$curdate] ... $_\n";
+                    print "[                        ] $_ ...\n";
                 }
             }
         } 
