@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 use Time::Piece;
-use Time::Seconds;
 use File::ReadBackwards;
 
 #Todo:
@@ -12,40 +11,42 @@ use File::ReadBackwards;
 
 sub debug {
     my $debug_toggle = "no";
-    if(defined $debug_toggle){
-        if ($debug_toggle eq "yes") {
-            # silences a warning
-            #if($_[1]){ 
-                print "(debug) @_\n"; 
-            #} 
-        } 
-    }
+    # not sure why, but these checks silences warnings
+    #if( ($debug_toggle eq "yes") && (defined $debug_toggle) && $_[1] ) {
+    if( ($debug_toggle eq "yes") && (defined $debug_toggle) ) {
+        print "(debug) @_\n"; 
+    } 
 }
 
 # Variables
+my $file  = '/var/log/chkservd.log';
+my $checks_per_day;
+chomp(my $every_n_sec=`grep chkservd_check_interval /var/cpanel/cpanel.config | cut -d= -f2`);
+my $every_n_min;
 my @lines;
-my $lastdate;
+my $line_has_date=0;
+my $lastdate='';
 my $curdate;
 my $duration;
 my $duration_min;
-my $line_has_date=0;
-my $checks_per_day;
-chomp(my $every_n_sec=`grep chkservd_check_interval /var/cpanel/cpanel.config | cut -d= -f2`);
-my $file  = '/var/log/chkservd.log';
+my $duration_reported;
 
 # Set search time for 'system too slow' check
 # IDK why this didn't work:
 #if ( !$every_n_sec =~ /\D/ ) \{
 #if ( !looks_like_number $every_n_sec || $every_n_sec < 1 ) \{
 if ( $every_n_sec < 1 ) {
-    &debug("every_n_sec is not an acceptable digit, using default 10");
-    $checks_per_day=10;
+    &debug("every_n_sec is not an acceptable digit, using default 300 = 10 min");
+    $every_n_sec=300;
+    $checks_per_day = ( 24*(60/($every_n_sec/60)) );
 } 
 else { 
     &debug("every_n_sec is a digit, using it");
     $checks_per_day = ( 24*(60/($every_n_sec/60)) );
     &debug("checks_per_day is: $checks_per_day");
 }
+# Add a 5 minute cusion to lower number of reports
+$every_n_min=(($every_n_sec/60)+5);
 
 ## Open log file
 # Get number of days to check
@@ -72,20 +73,21 @@ sub reverse_lines {
 
 # While loop reads the file
 while (@lines) {
+    &debug("While loop started");
     my $line = shift(@lines);
     # Set the date
     if ($line =~ /\[(\d{4}(-\d{2}){2} \d{2}(:\d{2}){2} [+-]\d{4})\].*/) {
         $line_has_date = 1;
-        &debug("one is $1");
+        $duration_reported = 0;
+        &debug("Date string found, one is $1");
 
-        ##########
-        # Time::Piece
         $curdate = Time::Piece->strptime($1, "%Y-%m-%d %H:%M:%S %z");
         &debug("curdate is now $curdate");
+        &debug("lastdate is $lastdate");
 
         # Calculate time difference between this & last check
         # If this is the first time run, establish the starting values
-        # note to self: this would have worked too: $lastdate ||= $curdate;
+        # note to self: the cPanel way (although I'd lose my debug): $lastdate ||= $curdate;
         if (!$lastdate) {
             $lastdate = $curdate;
             &debug ("after setting first occurence, lastdate is ", $lastdate, "\n");
@@ -102,7 +104,7 @@ while (@lines) {
 
     # These are usually trash lines
     if ($line !~ /Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second/ && $line =~ /:-]/){
-        print "[$lastdate] ....\n";
+        print "[$curdate] ....\n";
     }
     # Main search
     if ($line =~ /Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second/){
@@ -110,20 +112,22 @@ while (@lines) {
         if (scalar(@array_fields) > 1){
             foreach (@array_fields) {
                 if (/:-]/) {
-                    print "[$lastdate] $_\n";
+                    print "[$curdate] $_\n";
                 }
             }
         } 
         else {
-                print "[$lastdate] $line";
-            }
-        #&debug("\nWHILE LOOP DONE\n");
+            print "[$curdate] $line";
+        }
     }
 
     &debug ("duration_min is ", $duration_min);
-    if(defined $duration_min){
-        if($duration_min > $checks_per_day) {
-            printf "[$lastdate] %.0f minutes since last check\n", $duration_min;
+    &debug ("duration_reported is ", $duration_reported);
+    if( (defined $duration_min) && ($duration_reported == 0) ){
+        if($duration_min > $every_n_min) {
+            printf "[$curdate] %.0f minutes since last check\n", $duration_min;
+            $duration_reported = 1;
+            &debug ("duration_reported is ", $duration_reported);
         }
     }
 
@@ -132,4 +136,5 @@ while (@lines) {
         $lastdate=$curdate;
     }
 
+&debug("While loop finished\n");
 }
