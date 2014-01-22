@@ -6,7 +6,7 @@ use Time::Piece;
 use File::ReadBackwards;
 
 #Todo:
-# print in same time zone as log file
+# print in same time zone as log file (currently prints in GMT)
 # account for broken lines better
 # headers
 # print help?
@@ -21,6 +21,7 @@ sub debug {
 }
 
 # Variables
+my $verbose=1;
 my $file  = '/var/log/chkservd.log';
 my $checks_per_day;
 chomp(my $every_n_sec=`grep chkservd_check_interval /var/cpanel/cpanel.config | cut -d= -f2`);
@@ -32,9 +33,8 @@ my $curdate;
 my $duration;
 my $duration_min;
 my $duration_reported;
-my $verbose=1;
-my $regex;
-my $regex2;
+my $regex_error_bucket;
+my $regex_known_full_lines;
 
 # Set search time for 'system too slow' check
 # IDK why this didn't work:
@@ -108,37 +108,38 @@ while (@lines) {
     }
 
     # Regex for errors
-    $regex='Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second';
-    $regex2='second';
+    $regex_error_bucket='Restarting|nable|\*\*|imeout|ailure|terrupt';
+    $regex_known_full_lines='100%|9[89]%|second';
 
-    # These are usually trash lines
-    if ($line !~ /$regex/ && $line =~ /:-]/){
+    # If these are seen, something needs to be added to the error_bucket
+    if ( ($line !~ /$regex_error_bucket/) && ($line =~ /:-]/) ){
         print "[$curdate] ....\n";
     }
     # Main search
-    if ($line =~ /$regex/){
+    if ($line =~ /$regex_error_bucket/){
         &debug ("line is ", $line);
         my @array_fields = split /(\.){2,}/,$line;
         &debug ("num fields is ", scalar(@array_fields));
         if (scalar(@array_fields) > 0){
             foreach (@array_fields) {
-                if ( ($_=~/$regex2/) ) {
-                    print "[$curdate] $_";
-                }
+                # This is main search. Every thing else is exceptions
                 if ( ($_=~/:-]/) ) {
                     print "[$curdate] $_\n";
                 }
                 # More verbose output for broken lines
-                elsif ( ($verbose==1) && ($_=~/$regex/) && ($_!~/$regex2/) ){
+                elsif ( ($verbose==1) && ($_=~/$regex_error_bucket/) ){
                     chomp($_);
-                    #print "[$curdate] ... $_\n";
+                    # Without doing a much more complicated subroutine, this the best that can be done.  
+                    # The empty space is an attempt to let user know the message goes with the following
+                    # line displayed, not the previous one. The error variation shows that chksrvd should
+                    # really be output in JSON format.
                     print "[                        ] $_ ...\n";
                 }
             }
         } 
-        else {
-            print "[$curdate] $line";
-        }
+    }
+    elsif ($line =~ /$regex_known_full_lines/) {
+        print "[$curdate] $line";
     }
 
     &debug ("duration_min is ", $duration_min);
