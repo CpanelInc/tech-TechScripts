@@ -6,6 +6,8 @@ use Time::Piece;
 use File::ReadBackwards;
 
 #Todo:
+# print in same time zone as log file
+# account for broken lines better
 # headers
 # print help?
 
@@ -30,6 +32,8 @@ my $curdate;
 my $duration;
 my $duration_min;
 my $duration_reported;
+my $verbose=0;
+my $regex;
 
 # Set search time for 'system too slow' check
 # IDK why this didn't work:
@@ -102,17 +106,27 @@ while (@lines) {
         }
     }
 
+    # Regex for errors
+    $regex='Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second';
+
     # These are usually trash lines
-    if ($line !~ /Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second/ && $line =~ /:-]/){
+    if ($line !~ /$regex/ && $line =~ /:-]/){
         print "[$curdate] ....\n";
     }
     # Main search
-    if ($line =~ /Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second/){
+    if ($line =~ /$regex/){
+        &debug ("line is ", $line);
         my @array_fields = split /(\.){2,}/,$line;
-        if (scalar(@array_fields) > 1){
+        &debug ("num fields is ", scalar(@array_fields));
+        if (scalar(@array_fields) > 0){
             foreach (@array_fields) {
                 if (/:-]/) {
                     print "[$curdate] $_\n";
+                }
+                # More verbose output for broken lines
+                elsif ( ($verbose==1) && ($_=~/$regex/) ){
+                    chomp($_);
+                    print "[$curdate] ... $_\n";
                 }
             }
         } 
