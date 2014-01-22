@@ -40,7 +40,8 @@ my $file  = '/var/log/chkservd.log';
 if ( $every_n_sec < 1 ) {
     &debug("every_n_sec is not an acceptable digit, using default 10");
     $checks_per_day=10;
-} else { 
+} 
+else { 
     &debug("every_n_sec is a digit, using it");
     $checks_per_day = ( 24*(60/($every_n_sec/60)) );
     &debug("checks_per_day is: $checks_per_day");
@@ -70,8 +71,8 @@ sub reverse_lines {
 @lines = &reverse_lines();
 
 # While loop reads the file
-#while ($line = <$file>) {
-foreach my $line(@lines) {
+while (@lines) {
+    my $line = shift(@lines);
     # Set the date
     if ($line =~ /\[(\d{4}(-\d{2}){2} \d{2}(:\d{2}){2} [+-]\d{4})\].*/) {
         $line_has_date = 1;
@@ -88,7 +89,8 @@ foreach my $line(@lines) {
         if (!$lastdate) {
             $lastdate = $curdate;
             &debug ("after setting first occurence, lastdate is ", $lastdate, "\n");
-        } else {
+        } 
+        else {
             $duration = $curdate - $lastdate;
             &debug("duration is $duration");
             &debug ("duration is ", $duration->minutes, " minutes");
@@ -99,20 +101,21 @@ foreach my $line(@lines) {
     }
 
     # These are usually trash lines
-    if ($line !~ /Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second/ && $line =~ /:\-\]/){
-        print "[", $lastdate, "] ", " ....\n";
+    if ($line !~ /Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second/ && $line =~ /:-]/){
+        print "[$lastdate] ....\n";
     }
     # Main search
     if ($line =~ /Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second/){
         my @array_fields = split /(\.){2,}/,$line;
         if (scalar(@array_fields) > 1){
             foreach (@array_fields) {
-                if (/:\-\]/) {
-                    print "[", $lastdate, "] ", $_, "\n";
+                if (/:-]/) {
+                    print "[$lastdate] $_\n";
                 }
             }
-        } else {
-                print "[", $lastdate, "] ", $line;
+        } 
+        else {
+                print "[$lastdate] $line";
             }
         #&debug("\nWHILE LOOP DONE\n");
     }
