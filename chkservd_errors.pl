@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Time::Piece;
-use Time::Seconds;
+#use Time::Seconds;
 use File::ReadBackwards;
 
 #Todo:
@@ -31,7 +31,7 @@ my @lines;
 my $line_has_date=0;
 my $lastdate='';
 my $curdate;
-my $pr_curdate; # have to print it GMT for now
+my $curdate_printable; # have to print it GMT for now
 my $duration;
 my $duration_min;
 my $duration_reported;
@@ -91,8 +91,8 @@ while (@lines) {
         $curdate = Time::Piece->strptime($1, "%Y-%m-%d %H:%M:%S %z");
         &debug("curdate is now $curdate");
         &debug("lastdate is $lastdate");
-        $pr_curdate=$curdate->strftime("%Y-%m-%d %H:%M:%S -0000");
-        &debug("pr_curdate is $pr_curdate");
+        $curdate_printable=$curdate->strftime("%Y-%m-%d %H:%M:%S -0000");
+        &debug("curdate_printable is $curdate_printable");
 
         # Calculate time difference between this & last check
         # If this is the first time run, establish the starting values
@@ -117,7 +117,7 @@ while (@lines) {
 
     # If these are seen, something needs to be added to the error_bucket
     if ( ($line !~ /$regex_error_bucket/) && ($line =~ /:-]/) ){
-        print "[$pr_curdate] ....\n";
+        print "[$curdate_printable] ....\n";
     }
     # Main search
     if ($line =~ /$regex_error_bucket/){
@@ -127,30 +127,30 @@ while (@lines) {
         if (scalar(@array_fields) > 0){
             foreach (@array_fields) {
                 # This is main search. Every thing else is exceptions
-                if ( ($_=~/:-]/) ) {
-                    print "[$pr_curdate] $_\n";
+                if ( /:-]/ ) {
+                    print "[$curdate_printable] $_\n";
                 }
                 # More verbose output for broken lines
-                elsif ( ($verbose==1) && ($_=~/$regex_error_bucket/) ){
-                    chomp($_);
+                elsif ( (/$regex_error_bucket/) && ($verbose==1) ){
+                    chomp;
                     # Without doing a more complicated subroutine/hash, this the best that can be done.  
                     # The empty space is an attempt to let user know the message goes with the following
                     # line displayed, not the previous one. The error variation shows that chksrvd should
                     # really be output in JSON format.
-                    print "[                         ] $_ ...\n";
+                    print "[                         ] ", substr($_,0,100), "...\n";
                 }
             }
         } 
     }
     elsif ($line =~ /$regex_known_full_lines/) {
-        print "[$pr_curdate] $line";
+        print "[$curdate_printable] $line";
     }
 
     &debug ("duration_min is ", $duration_min);
     &debug ("duration_reported is ", $duration_reported);
     if( (defined $duration_min) && ($duration_reported == 0) ){
         if($duration_min > $every_n_min) {
-            printf "[$pr_curdate] %.0f minutes since last check\n", $duration_min;
+            printf "[$curdate_printable] %.0f minutes since last check\n", $duration_min;
             $duration_reported = 1;
             &debug ("duration_reported is ", $duration_reported);
         }
