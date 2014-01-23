@@ -126,7 +126,7 @@ while (@lines) {
         &debug ("num fields is ", scalar(@array_fields));
         if (scalar(@array_fields) > 0){
             foreach (@array_fields) {
-                # This is main search. Every thing else is exceptions
+                # This is main search. Every thing else is exceptions. If happy face can't find it, it's weird.
                 if ( /:-]/ ) {
                     print "[$curdate_printable] $_\n";
                 }
@@ -134,9 +134,9 @@ while (@lines) {
                 elsif ( (/$regex_error_bucket/) && ($verbose==1) ){
                     chomp;
                     # Without doing a more complicated subroutine/hash, this the best that can be done.  
-                    # The empty space is an attempt to let user know the message goes with the following
-                    # line displayed, not the previous one. The error variation shows that chksrvd should
-                    # really be output in JSON format.
+                    # The empty space means that the error message might go with the following line displayed,
+                    # or the previous one. 
+                    # The error variation shows that chksrvd should really be output in JSON format.
                     print "[                         ] ", substr($_,0,100), "...\n";
                 }
             }
