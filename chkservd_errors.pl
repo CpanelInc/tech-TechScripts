@@ -152,7 +152,7 @@ while (@lines) {
         } 
     }
     elsif ($line =~ /$regex_known_full_lines/) {
-        print "[$curdate_printable] $line";
+        print $line;
     }
 
     &debug ("duration_min is ", $duration_min);
