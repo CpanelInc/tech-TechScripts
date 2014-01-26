@@ -3,12 +3,12 @@
 use strict;
 use warnings;
 use Time::Piece;
-#use Time::Seconds;
+use Time::Seconds;
 use File::ReadBackwards;
 
 #Todo:
-# print in same time zone as log file (currently prints in GMT)
 # account for broken lines better
+# add a line from messeges, showing if server was restarted?
 # headers
 # print help?
 
@@ -31,6 +31,8 @@ my @lines;
 my $line_has_date=0;
 my $lastdate='';
 my $curdate;
+my $tz;
+my $tz_num;
 my $curdate_printable; # have to print it GMT for now
 my $duration;
 my $duration_min;
@@ -91,7 +93,13 @@ while (@lines) {
         $curdate = Time::Piece->strptime($1, "%Y-%m-%d %H:%M:%S %z");
         &debug("curdate is now $curdate");
         &debug("lastdate is $lastdate");
-        $curdate_printable=$curdate->strftime("%Y-%m-%d %H:%M:%S -0000");
+        $tz = $curdate->strftime("%z");
+        &debug("tz is $tz");
+        $tz_num = ($tz + 0)/100;
+        &debug("tz_num is $tz_num");
+        $curdate = $curdate + ($tz_num*ONE_HOUR);
+        &debug("after tz adjustment, curdate is now $curdate");
+        $curdate_printable=$curdate->strftime("%Y-%m-%d %H:%M:%S $tz");
         &debug("curdate_printable is $curdate_printable");
 
         # Calculate time difference between this & last check
