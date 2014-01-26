@@ -13,7 +13,7 @@ use File::ReadBackwards;
 # print help?
 
 sub debug {
-    my $debug_toggle = "no";
+    my $debug_toggle = "yes";
     # not sure why, but these checks silences warnings
     #if( ($debug_toggle eq "yes") && (defined $debug_toggle) && $_[1] ) {
     if( ($debug_toggle eq "yes") && (defined $debug_toggle) ) {
@@ -98,7 +98,7 @@ while (@lines) {
         &debug("tz is $tz");
         $tz_num = ($tz + 0)/100;
         &debug("tz_num is $tz_num");
-        $curdate = $curdate + ($tz_num*ONE_HOUR);
+        $curdate += $tz_num*ONE_HOUR;
         &debug("after tz adjustment, curdate is now $curdate");
         $curdate_printable=$curdate->strftime("%Y-%m-%d %H:%M:%S $tz");
         &debug("curdate_printable is $curdate_printable");
