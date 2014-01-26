@@ -28,7 +28,7 @@ my $checks_per_day;
 chomp(my $every_n_sec=`grep chkservd_check_interval /var/cpanel/cpanel.config | cut -d= -f2`);
 my $every_n_min;
 my @lines;
-my $line_has_date=0;
+my $line_has_date=2;
 my $lastdate='';
 my $curdate;
 my $tz;
@@ -87,6 +87,7 @@ while (@lines) {
     # Set the date
     if ($line =~ /\[(\d{4}(-\d{2}){2} \d{2}(:\d{2}){2} [+-]\d{4})\].*/) {
         $line_has_date = 1;
+        &debug("line_has_date is now on: $line_has_date");
         $duration_reported = 0;
         &debug("Date string found, one is $1");
 
@@ -119,10 +120,11 @@ while (@lines) {
             &debug ("duration_min is ", $duration_min);
         }
     }
+    &debug("line_has_date, after if loop, is $line_has_date");
 
     # Regex for errors
-    $regex_error_bucket='Restarting|nable|\*\*|imeout|ailure|terrupt';
-    $regex_known_full_lines='100%|9[89]%|second';
+    $regex_error_bucket='Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%';
+    $regex_known_full_lines='second';
 
     # If these are seen, something needs to be added to the error_bucket
     if ( ($line !~ /$regex_error_bucket/) && ($line =~ /:-]/) ){
@@ -136,11 +138,19 @@ while (@lines) {
         if (scalar(@array_fields) > 0){
             foreach (@array_fields) {
                 # This is main search. Every thing else is exceptions. If happy face can't find it, it's weird.
+                &debug("line_has_date, in foreach, is $line_has_date");
                 if ( /:-]/ ) {
-                    print "[$curdate_printable] $_\n";
+                    chomp;
+                    print "[$curdate_printable] ", substr($_,0,100), "...\n";
+                &debug("line_has_date, in if_foreach, is $line_has_date");
                 }
                 # More verbose output for broken lines
+                elsif ( ($_ =~ /$regex_error_bucket/) && ($line_has_date==1) ){
+                    chomp;
+                    print "[$curdate_printable] ", substr($_,0,100), "...\n";
+                }
                 elsif ( (/$regex_error_bucket/) && ($verbose==1) ){
+                &debug("line_has_date, in if_error_bucket & verbose, is $line_has_date");
                     chomp;
                     # Without doing a more complicated subroutine/hash, this the best that can be done.  
                     # The empty space means that the error message might go with the following line displayed,
@@ -149,10 +159,15 @@ while (@lines) {
                     print "[                         ] ", substr($_,0,100), "...\n";
                 }
             }
-        } 
+        }
     }
     elsif ($line =~ /$regex_known_full_lines/) {
-        print $line;
+        if ($line_has_date==1){
+            print $line;
+        }
+        else{
+            print "[$curdate_printable] $line";
+        }
     }
 
     &debug ("duration_min is ", $duration_min);
@@ -166,9 +181,12 @@ while (@lines) {
     }
 
     # Set lastdate for next round
-    if ($line_has_date) {
+    if ($line_has_date==1) {
         $lastdate=$curdate;
     }
+    # Reset so we can check again
+    $line_has_date = 2;
+    &debug("line_has_date is now off: $line_has_date");
 
 &debug("While loop finished\n");
 }
