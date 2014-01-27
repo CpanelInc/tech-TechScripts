@@ -33,7 +33,7 @@ my $lastdate='';
 my $curdate;
 my $tz;
 my $tz_num;
-my $curdate_printable; # have to print it GMT for now
+my $curdate_printable;
 my $duration;
 my $duration_min;
 my $duration_reported;
@@ -90,6 +90,7 @@ while (@lines) {
         $duration_reported = 0;
         &debug("Date string found, one is $1");
 
+        # very manually adjusting timezone
         $curdate = Time::Piece->strptime($1, "%Y-%m-%d %H:%M:%S %z");
         &debug("curdate is now $curdate");
         &debug("lastdate is $lastdate");
