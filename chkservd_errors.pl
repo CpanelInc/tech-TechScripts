@@ -13,7 +13,7 @@ use File::ReadBackwards;
 # print help?
 
 sub debug {
-    my $debug_toggle = "yes";
+    my $debug_toggle = "no";
     # not sure why, but these checks silences warnings
     #if( ($debug_toggle eq "yes") && (defined $debug_toggle) && $_[1] ) {
     if( ($debug_toggle eq "yes") && (defined $debug_toggle) ) {
