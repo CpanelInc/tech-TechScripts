@@ -12,24 +12,16 @@ use File::ReadBackwards;
 # headers
 # print help?
 
-sub debug {
-    my $debug_toggle = "no";
-    # not sure why, but these checks silences warnings
-    #if( ($debug_toggle eq "yes") && (defined $debug_toggle) && $_[1] ) {
-    if( ($debug_toggle eq "yes") && (defined $debug_toggle) ) {
-        print "(debug) @_\n"; 
-    } 
-}
 
 # Variables
-my $verbose=1;
-my $file  = '/var/log/chkservd.log';
+my $verbose = 1;
+my $file = '/var/log/chkservd.log';
 my $checks_per_day;
-chomp(my $every_n_sec=`grep chkservd_check_interval /var/cpanel/cpanel.config | cut -d= -f2`);
+chomp(my $every_n_sec = `grep chkservd_check_interval /var/cpanel/cpanel.config | cut -d= -f2`);
 my $every_n_min;
 my @lines;
-my $line_has_date=2;
-my $lastdate='';
+my $line_has_date = 2;
+my $lastdate = '';
 my $curdate;
 my $tz;
 my $tz_num;
@@ -46,7 +38,7 @@ my $regex_known_full_lines;
 #if ( !looks_like_number $every_n_sec || $every_n_sec < 1 ) \{
 if ( $every_n_sec < 1 ) {
     &debug("every_n_sec is not an acceptable digit, using default 300 = 10 min");
-    $every_n_sec=300;
+    $every_n_sec = 300;
     $checks_per_day = ( 24*(60/($every_n_sec/60)) );
 } 
 else { 
@@ -55,7 +47,7 @@ else {
     &debug("checks_per_day is: $checks_per_day");
 }
 # Add a 5 minute cusion to lower number of reports
-$every_n_min=(($every_n_sec/60)+5);
+$every_n_min = (($every_n_sec/60)+5);
 
 ## Open log file
 # Get number of days to check
@@ -65,18 +57,6 @@ my $lines_to_check = ($days*$checks_per_day*6.5);
 &debug("lines_to_check is: $lines_to_check");
 
 # Tail the file (opeing the whole thing is ridonculous time-wise)
-sub reverse_lines {
-    my $lim = $lines_to_check;
-    my $bw = File::ReadBackwards->new( $file ) or die "can't read $file: $!\n" ;
-
-    my $line;
-    my @lines;
-    while( defined( my $line = $bw->readline ) ) {
-        push @lines, $line;
-        last if --$lim <= 0;
-    }
-    reverse @lines;
-}
 
 @lines = &reverse_lines();
 
@@ -123,8 +103,8 @@ while (@lines) {
     &debug("line_has_date, after if loop, is $line_has_date");
 
     # Regex for errors
-    $regex_error_bucket='Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%';
-    $regex_known_full_lines='second';
+    $regex_error_bucket = 'Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%';
+    $regex_known_full_lines = 'second';
 
     # If these are seen, something needs to be added to the error_bucket
     if ( ($line !~ /$regex_error_bucket/) && ($line =~ /:-]/) ){
@@ -145,11 +125,11 @@ while (@lines) {
                 &debug("line_has_date, in if_foreach, is $line_has_date");
                 }
                 # More verbose output for broken lines
-                elsif ( ($_ =~ /$regex_error_bucket/) && ($line_has_date==1) ){
+                elsif ( ($_ =~ /$regex_error_bucket/) && ($line_has_date == 1) ){
                     chomp;
                     print "[$curdate_printable] ", substr($_,0,100), "...\n";
                 }
-                elsif ( (/$regex_error_bucket/) && ($verbose==1) ){
+                elsif ( (/$regex_error_bucket/) && ($verbose == 1) ){
                 &debug("line_has_date, in if_error_bucket & verbose, is $line_has_date");
                     chomp;
                     # Without doing a more complicated subroutine/hash, this the best that can be done.  
@@ -162,7 +142,7 @@ while (@lines) {
         }
     }
     elsif ($line =~ /$regex_known_full_lines/) {
-        if ($line_has_date==1){
+        if ($line_has_date == 1){
             print $line;
         }
         else{
@@ -181,8 +161,8 @@ while (@lines) {
     }
 
     # Set lastdate for next round
-    if ($line_has_date==1) {
-        $lastdate=$curdate;
+    if ($line_has_date == 1) {
+        $lastdate = $curdate;
     }
     # Reset so we can check again
     $line_has_date = 2;
@@ -190,3 +170,26 @@ while (@lines) {
 
 &debug("While loop finished\n");
 }
+
+sub debug {
+    my $debug_toggle = "no";
+    # not sure why, but these checks silences warnings
+    #if( ($debug_toggle eq "yes") && (defined $debug_toggle) && $_[1] ) {
+    if( ($debug_toggle eq "yes") && (defined $debug_toggle) ) {
+        print "(debug) @_\n"; 
+    } 
+}
+
+sub reverse_lines {
+    my $lim = $lines_to_check;
+    my $bw = File::ReadBackwards->new( $file ) or die "can't read $file: $!\n" ;
+
+    my $line;
+    my @lines;
+    while( defined( my $line = $bw->readline ) ) {
+        push @lines, $line;
+        last if --$lim <= 0;
+    }
+    reverse @lines;
+}
+
