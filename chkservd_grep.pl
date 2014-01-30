@@ -435,7 +435,7 @@ sub log_entries_by_date {
         $fh_pointer_position = tell($fh);
 
         # Stop reading if we just read the very top of the file
-        last if $final_seek or $DEBUG and scalar @entries > 10;
+        last if $final_seek;
 
         # Move file pointer up so that we can read previous block of data
         if ($fh_pointer_position < -$bytes * 2) {
