@@ -120,15 +120,15 @@ my $interval = get_config_value('/var/cpanel/cpanel.config',
 # log file and perform the necessary filtering and time calculations in one
 # pass.
 # 
+# TIP: Avoid running expensive operations multiple times. Obviously, don't
+# loop within a loop if there is no real need to do so. Less obviously,
+# run just one regex and extract the needed info in one pass.
+#
 # TIP: With regular expressions, you should generally follow the "simpler is
 # better" rule. Instead of using a regex that maps the timestamp parts to
 # date, time and timezone, you can just look for lines matching
 # [xxxx-xx-xx ? ?] and then split on the space character to get the time and
 # timezone
-#
-# TIP: Avoid running expensive operations multiple times. Obviously, don't
-# loop within a loop if there is no real need to do so. Less obviously,
-# run just one regex and extract the needed info in one pass.
 #
 # Pattern that matches the beginning of each log entry in /var/log/chkservd.log
 # The timestamp portion must be enclosed in () to permit extraction
