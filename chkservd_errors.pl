@@ -46,7 +46,7 @@ else {
     $checks_per_day = ( 24*(60/($every_n_sec/60)) );
     &debug("checks_per_day is: $checks_per_day");
 }
-# Add a 5 minute cusion to lower number of reports
+# Add a 5 minute cushion to lower number of reports
 $every_n_min = (($every_n_sec/60)+5);
 
 ## Open log file
@@ -58,7 +58,7 @@ my $lines_to_check = ($days*$checks_per_day*6.5);
 
 # Tail the file (opeing the whole thing is ridonculous time-wise)
 
-@lines = &reverse_lines();
+@lines = &tail_file();
 
 # While loop reads the file
 while (@lines) {
@@ -180,7 +180,7 @@ sub debug {
     } 
 }
 
-sub reverse_lines {
+sub tail_file {
     my $lim = $lines_to_check;
     my $bw = File::ReadBackwards->new( $file ) or die "can't read $file: $!\n" ;
 
