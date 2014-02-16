@@ -20,6 +20,8 @@ my $checks_per_day;
 chomp(my $every_n_sec = `grep chkservd_check_interval /var/cpanel/cpanel.config | cut -d= -f2`);
 my $every_n_min;
 my @lines;
+my $started=0;
+my $current_record = '';
 my $line_has_date = 2;
 my $lastdate = '';
 my $curdate;
@@ -57,20 +59,43 @@ my $lines_to_check = ($days*$checks_per_day*6.5);
 &debug("lines_to_check is: $lines_to_check");
 
 # Tail the file (opeing the whole thing is ridonculous time-wise)
-
 @lines = &tail_file();
 
+#
 # While loop reads the file
+# This is the main section of code
+#
 while (@lines) {
     &debug("While loop started");
     my $line = shift(@lines);
-    # Set the date
+    # Look for line with a date
     if ($line =~ /\[(\d{4}(-\d{2}){2} \d{2}(:\d{2}){2} [+-]\d{4})\].*/) {
         $line_has_date = 1;
         &debug("line_has_date is now on: $line_has_date");
         $duration_reported = 0;
         &debug("Date string found, one is $1");
 
+        &debug("Before check, started is $started");
+        if ($started == 1) {
+            &check_record($current_record);
+            $started = 0;
+        }
+        &debug("After 1st check, started is $started");
+        if ($started == 0) {
+            &set_date($1);
+            $started = 1;
+            $current_record = $line;
+        }
+    }
+    else {
+        chomp($current_record);
+        $current_record .= " " . $line;
+    }
+
+&debug("While loop finished\n");
+}
+
+sub set_date {
         # very manually adjusting timezone
         $curdate = Time::Piece->strptime($1, "%Y-%m-%d %H:%M:%S %z");
         &debug("curdate is now $curdate");
@@ -99,21 +124,26 @@ while (@lines) {
             $duration_min=$duration->minutes;
             &debug ("duration_min is ", $duration_min);
         }
-    }
-    &debug("line_has_date, after if loop, is $line_has_date");
 
+    &debug("line_has_date, after if loop, is $line_has_date");
+}
+
+#
+# The main check 
+#
+sub check_record {
     # Regex for errors
-    $regex_error_bucket = 'Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%';
-    $regex_known_full_lines = 'second';
+    $regex_error_bucket = 'Restarting|nable|\*\*|imeout|ailure|terrupt|100%|9[89]%|second';
 
     # If these are seen, something needs to be added to the error_bucket
-    if ( ($line !~ /$regex_error_bucket/) && ($line =~ /:-]/) ){
+    if ( ($current_record !~ /$regex_error_bucket/) && ($current_record =~ /:-]/) ){
         print "[$curdate_printable] ....\n";
     }
     # Main search
-    if ($line =~ /$regex_error_bucket/){
-        &debug ("line is ", $line);
-        my @array_fields = split /(\.){2,}/,$line;
+    &debug ("just before error regex, current_record is ", $current_record);
+    if ($current_record =~ /$regex_error_bucket/){
+        &debug ("line is ", $current_record);
+        my @array_fields = split /(\.){2,}/,$current_record;
         &debug ("num fields is ", scalar(@array_fields));
         if (scalar(@array_fields) > 0){
             foreach (@array_fields) {
@@ -129,27 +159,17 @@ while (@lines) {
                     chomp;
                     print "[$curdate_printable] ", substr($_,0,100), "...\n";
                 }
+                # This should no longer be necessary
                 elsif ( (/$regex_error_bucket/) && ($verbose == 1) ){
                 &debug("line_has_date, in if_error_bucket & verbose, is $line_has_date");
                     chomp;
-                    # Without doing a more complicated subroutine/hash, this the best that can be done.  
-                    # The empty space means that the error message might go with the following line displayed,
-                    # or the previous one. 
-                    # The error variation shows that chksrvd should really be output in JSON format.
                     print "[                         ] ", substr($_,0,100), "...\n";
                 }
             }
         }
     }
-    elsif ($line =~ /$regex_known_full_lines/) {
-        if ($line_has_date == 1){
-            print $line;
-        }
-        else{
-            print "[$curdate_printable] $line";
-        }
-    }
 
+    # check if duration is too long
     &debug ("duration_min is ", $duration_min);
     &debug ("duration_reported is ", $duration_reported);
     if( (defined $duration_min) && ($duration_reported == 0) ){
@@ -167,10 +187,11 @@ while (@lines) {
     # Reset so we can check again
     $line_has_date = 2;
     &debug("line_has_date is now off: $line_has_date");
-
-&debug("While loop finished\n");
 }
 
+#
+# Debug lines print (debug) before output
+#
 sub debug {
     my $debug_toggle = "no";
     # not sure why, but these checks silences warnings
@@ -180,6 +201,10 @@ sub debug {
     } 
 }
 
+#
+# Tail the file only so many lines. Saves time.
+# Right now, it's not completely accurate.
+#
 sub tail_file {
     my $lim = $lines_to_check;
     my $bw = File::ReadBackwards->new( $file ) or die "can't read $file: $!\n" ;
