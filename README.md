@@ -3,6 +3,7 @@ TechScripts
 
 A Repository for Miscellaneous Scripts
 
+| Script | Description |
 | ------------- |:-------------:|
 | authdns.sh | Show authoritative DNS server information |
 | backup_report.sh | Show if backups are enabled/successful |
