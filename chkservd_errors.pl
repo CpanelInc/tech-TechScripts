@@ -6,13 +6,6 @@ use Time::Piece;
 use Time::Seconds;
 use File::ReadBackwards;
 
-#Todo:
-# account for broken lines better
-# add a line from messeges, showing if server was restarted?
-# headers
-# print help?
-
-
 # Variables
 my $verbose = 1;
 my $file = '/var/log/chkservd.log';
@@ -95,6 +88,38 @@ while (@lines) {
 &debug("While loop finished\n");
 }
 
+#
+# Debug lines print (debug) before output
+#
+sub debug {
+    my $debug_toggle = "no";
+    # not sure why, but these checks silences warnings
+    #if( ($debug_toggle eq "yes") && (defined $debug_toggle) && $_[1] ) {
+    if( ($debug_toggle eq "yes") && (defined $debug_toggle) ) {
+        print "(debug) @_\n"; 
+    } 
+}
+
+#
+# Tail the file only so many lines. Saves time.
+# Right now, it's not completely accurate.
+#
+sub tail_file {
+    my $lim = $lines_to_check;
+    my $bw = File::ReadBackwards->new( $file ) or die "can't read $file: $!\n" ;
+
+    my $line;
+    my @lines;
+    while( defined( my $line = $bw->readline ) ) {
+        push @lines, $line;
+        last if --$lim <= 0;
+    }
+    reverse @lines;
+}
+
+#
+# Use Time::Piece object to set date
+#
 sub set_date {
         # very manually adjusting timezone
         $curdate = Time::Piece->strptime($1, "%Y-%m-%d %H:%M:%S %z");
@@ -154,7 +179,7 @@ sub check_record {
                     print "[$curdate_printable] ", substr($_,0,100), "...\n";
                 &debug("line_has_date, in if_foreach, is $line_has_date");
                 }
-                # More verbose output for broken lines
+                # Output for broken lines
                 elsif ( ($_ =~ /$regex_error_bucket/) && ($line_has_date == 1) ){
                     chomp;
                     print "[$curdate_printable] ", substr($_,0,100), "...\n";
@@ -188,33 +213,3 @@ sub check_record {
     $line_has_date = 2;
     &debug("line_has_date is now off: $line_has_date");
 }
-
-#
-# Debug lines print (debug) before output
-#
-sub debug {
-    my $debug_toggle = "no";
-    # not sure why, but these checks silences warnings
-    #if( ($debug_toggle eq "yes") && (defined $debug_toggle) && $_[1] ) {
-    if( ($debug_toggle eq "yes") && (defined $debug_toggle) ) {
-        print "(debug) @_\n"; 
-    } 
-}
-
-#
-# Tail the file only so many lines. Saves time.
-# Right now, it's not completely accurate.
-#
-sub tail_file {
-    my $lim = $lines_to_check;
-    my $bw = File::ReadBackwards->new( $file ) or die "can't read $file: $!\n" ;
-
-    my $line;
-    my @lines;
-    while( defined( my $line = $bw->readline ) ) {
-        push @lines, $line;
-        last if --$lim <= 0;
-    }
-    reverse @lines;
-}
-
