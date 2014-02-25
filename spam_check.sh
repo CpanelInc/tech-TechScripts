@@ -130,8 +130,7 @@ function get_subjects_of_top_domains () {
 
 # Domains sending:
 function find_addresses_sending_out () {
-    # Todo: get the original sender in bounce-back emails
-    declare -a sendingaddys=($(egrep "<" $temp_dir/cptemp_eximbp | awk '{print $4}' | sort | uniq -c | sort -n | sed 's/<>/no_address_or_bounce_msg/g' | tail -4));
+    declare -a sendingaddys=($(egrep "<" $temp_dir/cptemp_eximbp | awk '{print $4}' | sort | uniq -c | sort -n | sed 's/<>/bounce_email/g' | tail -4));
     echo -e "\nAddresses sending out: " ${sendingaddys[@]} "\n"| sed 's/ \([0-9]*\) /\n\1 /g'
     bigsender=$(echo ${sendingaddys[@]} | awk '{print $NF}'); 
     echo -e "So the big sender is:\n"$bigsender
