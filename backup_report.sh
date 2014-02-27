@@ -13,7 +13,7 @@ backlogdir=/usr/local/cpanel/logs/cpbackup;
 
 # check if new backups are enabled
 function check_new_backups() {
- echo -e "\n\n\033[36m[ cPTech Backup Report v2.0 ]\033[0m";
+ echo -e "\n\n\033[36m[ cPTech Backup Report v2.1 ]\033[0m";
  new_enabled=$(grep BACKUPENABLE /var/cpanel/backups/config 2>/dev/null | awk -F"'" '{print $2}')
  new_cron=$(crontab -l | grep bin\/backup | awk '{print $1,$2,$3,$4,$5}')
  if [ "$new_enabled" = "yes" ]; then new_status='\033[1;32m'Enabled'\033[0m'
