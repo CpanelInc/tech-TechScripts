@@ -81,7 +81,7 @@ fi;
 }
 
 function exceptions_heading() {
- echo -e "\n\033[36m[ A count of user exceptions (disabled/enabled users) ]\033[0m";
+ echo -e "\n\033[36m[ A count of users enabled/disabled ]\033[0m";
 }
 
 function list_legacy_exceptions() {
@@ -90,12 +90,12 @@ if [ $legacy_enabled == "yes" ]; then
  oldxs=$(egrep "LEGACY_BACKUP=0" /var/cpanel/users/* | wc -l);
  skip_file_ct=$(wc -l /etc/cpbackup-userskip.conf 2>/dev/null)
  if [ $oldxs -gt 0 -o "$skip_file_ct" ]; then
-  echo -e "Legacy Backups Exceptions";
+  echo -e "Legacy Backups:";
  fi
- if [ $oldxs -gt 0 ]; then echo -e "Number of real Legacy backup exceptions: "$oldxs"\n"; fi;
+ if [ $oldxs -gt 0 ]; then echo -e "Number of real Legacy backup users disabled: \033[1;31m$oldxs\033[0m\n"; fi;
  if [ -n "$skip_file_ct" ]; then echo -e "Extra Information: This skip file should no longer be used\n"$skip_file_ct"\n"; fi
 elif [ $legacy_users -gt 0 -a $legacy_status == "Disabled" ]; then
- echo -e "\nExtra Information: Legacy Backups aren't enabled, but there are $legacy_users users ready to use them."
+ echo -e "\nExtra Information: Legacy Backups are disabled as a whole, but there are $legacy_users users ready to use them."
 echo
 fi
 }
@@ -103,9 +103,9 @@ fi
 function list_new_exceptions() {
 if [ "$new_enabled" == "yes" ]; then
  newxs=$(egrep "BACKUP=0" /var/cpanel/users/* | grep ":BACK" | wc -l);
- echo -e "New Backups user exceptions: $newxs";
+ echo -e "New Backup users disabled: \033[1;31m$newxs\033[0m";
  newen=$(egrep "BACKUP=1" /var/cpanel/users/* | grep ":BACK" | wc -l);
- echo -e "New Backup users enabled: "$newen
+ echo -e "New Backup users enabled: \033[1;32m$newen\033[0m"
 fi
 }
 
