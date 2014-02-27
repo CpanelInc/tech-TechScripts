@@ -46,7 +46,7 @@ function check_new_ftp_backups() {
  if [ -n "$any_ftp_backups" ]; then ftp_backup_status='Enabled'
  else ftp_backup_status='Disabled'
  fi
- echo -e "\nNew FTP Backups = $ftp_backup_status\t(as of v2.0, this script only checks for new backups, not legacy)"
+ echo -e "\nNew FTP Backups = $ftp_backup_status\t(as of v2.0, this script only checks for new ftp backups, not legacy)"
 
  # Normal arrays
  declare -a ftp_server_files=($(\ls /var/cpanel/backups/*backup_destination));
