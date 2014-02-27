@@ -81,7 +81,7 @@ fi;
 }
 
 function exceptions_heading() {
- echo -e "\n\033[36m[ A count of user exceptions ]\033[0m";
+ echo -e "\n\033[36m[ A count of user exceptions (disabled/enabled users) ]\033[0m";
 }
 
 function list_legacy_exceptions() {
