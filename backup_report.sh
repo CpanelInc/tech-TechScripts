@@ -13,7 +13,7 @@ backlogdir=/usr/local/cpanel/logs/cpbackup;
 
 # check if new backups are enabled
 function check_new_backups() {
- echo -e "\n\n\033[36m[ cPTech Backup Report v1.1 ]\033[0m";
+ echo -e "\n\n\033[36m[ cPTech Backup Report v2.0 ]\033[0m";
  new_enabled=$(grep BACKUPENABLE /var/cpanel/backups/config 2>/dev/null | awk -F"'" '{print $2}')
  new_cron=$(crontab -l | grep bin\/backup | awk '{print $1,$2,$3,$4,$5}')
  if [ "$new_enabled" = "yes" ]; then new_status='\033[1;32m'Enabled'\033[0m'
@@ -30,6 +30,39 @@ function check_legacy_backups() {
  else legacy_status='\033[1;31m'Disabled'\033[0m'
  fi
  echo -e "Legacy Backups = $legacy_status\t(cron time: $legacy_cron)\t\t/etc/cpbackup.conf"
+}
+
+# For the ftp backup server checks.  I couldn't do this with normal arrays, so using this eval hack
+hput () {
+  eval hash"$1"='$2'
+}
+hget () {
+  eval echo '${hash'"$1"'#hash}'
+}
+
+# Check if any active FTP backups
+function check_new_ftp_backups() {
+ any_ftp_backups=$(\grep 'disabled: 0' /var/cpanel/backups/*backup_destination 2>/dev/null)
+ if [ -n "$any_ftp_backups" ]; then ftp_backup_status='Enabled'
+ else ftp_backup_status='Disabled'
+ fi
+ echo -e "\nNew FTP Backups = $ftp_backup_status\t(as of v2.0, this script only checks for new backups, not legacy)"
+
+ # Normal arrays
+ declare -a ftp_server_files=($(\ls /var/cpanel/backups/*backup_destination));
+ declare -a ftp_server_names=($(for i in ${ftp_server_files[@]}; do echo $i | cut -d/ -f5 | rev | cut -d_ -f4,5,6,7,8 | rev; done));
+ # Array hack is storing 'Disabled' status in $srvr_SERVER_NAME
+ for i in ${ftp_server_files[@]}; do hput srvr_$(echo $i | cut -d/ -f5 | rev | cut -d_ -f4,5,6,7,8 | rev) $(\grep disabled $i | awk '{print $2}'); done
+ 
+ # Print
+ for i in ${ftp_server_names[@]}; do 
+  echo -n "Backup FTP Server: "$i" = "
+  srvr_status=$(hget srvr_$i)
+  if [ $srvr_status = 0 ]; then
+   echo -e '\033[1;32m'Enabled'\033[0m';
+   else echo -e '\033[1;31m'Disabled'\033[0m';
+  fi
+ done
 }
 
 # look at start, end times.  print number of users where backup was attempted
@@ -106,11 +139,19 @@ function show_recent_errors() {
     # Errors from cPanel error log
     echo -e "\n/usr/local/cpanel/logs/error_log:"
     egrep "(warn|die|panic) \[backup" /usr/local/cpanel/logs/error_log | awk '{printf $1"] "; for (i=4;i<=20;i=i+1) {printf $i" "}; print ""}' | uniq -c | tail -3
+
+    #any_ftp_backups=$(\grep 'disabled: 0' /var/cpanel/backups/*backup_destination 2>/dev/null)
+    if [ -n "$any_ftp_backups" ]; then
+        # Errors from FTP backups
+        echo -e "\n/usr/local/cpanel/logs/cpbackup_transporter.log:"
+        egrep '] warn|] err' /usr/local/cpanel/logs/cpbackup_transporter.log | tail -5
+    fi
 }
 
 # Run all functions
 check_new_backups
 check_legacy_backups
+check_new_ftp_backups
 print_start_end_times 
 exceptions_heading
 list_legacy_exceptions
