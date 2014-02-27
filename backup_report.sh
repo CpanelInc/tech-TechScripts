@@ -103,7 +103,7 @@ fi
 function list_new_exceptions() {
 if [ "$new_enabled" == "yes" ]; then
  newxs=$(egrep "BACKUP=0" /var/cpanel/users/* | grep ":BACK" | wc -l);
- echo -e "New Backups exceptions: $newxs";
+ echo -e "New Backups user exceptions: $newxs";
  newen=$(egrep "BACKUP=1" /var/cpanel/users/* | grep ":BACK" | wc -l);
  echo -e "New Backup users enabled: "$newen
 fi
