@@ -103,7 +103,9 @@ fi
 function list_new_exceptions() {
 # TODO: math
 newsuspended=$(egrep "=1" /var/cpanel/users/* | grep "SUSPENDED" | wc -l);
-echo -e "Users suspended: \033[1;31m$newsuspended\033[0m";
+if [ "$newsuspended" != 0 ]; then
+    echo -e "Users suspended: \033[1;31m$newsuspended\033[0m";
+fi
 
 if [ "$new_enabled" == "yes" ]; then
  newxs=$(egrep "BACKUP=0" /var/cpanel/users/* | grep ":BACK" | wc -l);
