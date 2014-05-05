@@ -9,7 +9,7 @@
 # https://staffwiki.cpanel.net/LinuxSupport/GuideToDns#Bash_script_to_show_authoritative_nameservers_and_GLUE_records
 # 
 # How to download and use:
-# curl -O https://raw.github.com/cPanelTechs/TechScripts/master/authdns.sh > authdns.sh; chmod u+x authdns.sh
+# curl -O https://raw.githubusercontent.com/cPanelTechs/TechScripts/master/authdns.sh > authdns.sh; chmod u+x authdns.sh
 # ./authdns.sh cpanel.net
 #
 # Todo: check for two-part tlds, like .xx.co or .com.br (3753229)
