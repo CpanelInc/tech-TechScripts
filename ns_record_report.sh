@@ -2,7 +2,7 @@
 
 # Print column headers
 tput bold
-printf "%-20s %-20s %6s\n" "Nameserver" "ResolvedIP" "Zones"
+printf "%-24s %-16s %6s\n" "Nameserver" "ResolvedIP" "Zones"
 tput sgr0
 
 # Find all unique NS records in all zones and loop through their names
@@ -18,5 +18,5 @@ for nameserver in `grep -h '\bNS\b' /var/named/*.db |awk '{print $NF}' |sed 's/\
   zones=`grep "\bNS.*$nameserver" /var/named/*.db |wc -l`
 
   # Print row
-  printf "%-20s %-20s %6s\n" "$nameserver" "$resolved_ip" "$zones"
+  printf "%-24s %-16s %6s\n" "$nameserver" "$resolved_ip" "$zones"
 done
