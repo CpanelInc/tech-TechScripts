@@ -1,14 +1,22 @@
 #!/bin/sh
 
-# Find all unique NS records in all zones and loop through their names
-for NS in `grep -h '\bNS\b' /var/named/*.db |awk '{print $NF}' |sed 's/\.$//' |sort -u`; do
+# Print column headers
+tput bold
+printf "%20s %20s %20s\n" "Nameserver" "ResolvedIP" "Zones"
+tput sgr0
 
-  # Print nameserver name
-  echo -n "$NS   "
+# Find all unique NS records in all zones and loop through their names
+for nameserver in `grep -h '\bNS\b' /var/named/*.db |awk '{print $NF}' |sed 's/\.$//' |sort -u`; do
 
   # Do an A lookup on nameserver name
-  dig A $NS. +short |xargs echo -n; echo -n "   "
+  resolved_ip=`dig A $nameserver. +short |xargs echo -n`
+  if [[ -z $resolved_ip ]]; then
+    resolved_ip='no IP found'
+  fi
 
-  # Count number of zones in which nameserver name appears in NS Record
-  grep "\bNS.*$NS" /var/named/*.db |wc -l
+  # Count appearances in zones
+  zones=`grep "\bNS.*$nameserver" /var/named/*.db |wc -l`
+
+  # Print row
+  printf "%20s %20s %20s\n" "$nameserver" "$resolved_ip" "$zones"
 done
