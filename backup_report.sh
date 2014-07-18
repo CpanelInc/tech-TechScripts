@@ -75,9 +75,12 @@ if [ -e $backlogdir ]; then
   \ls -lrth | grep $i | awk '{print $6" "$7" "$8}';
   echo -ne " Number of users backed up:\t";  grep "user :" $i | wc -l;
  done;
+fi;
+}
+
+function print_num_expected_users () {
  echo -e "\n\033[36m[ Expected Number of Users ]\033[0m";
  wc -l /etc/trueuserdomains;
-fi;
 }
 
 function exceptions_heading() {
@@ -159,6 +162,7 @@ check_new_backups
 check_legacy_backups
 check_new_ftp_backups
 print_start_end_times 
+print_num_expected_users
 exceptions_heading
 list_legacy_exceptions
 list_new_exceptions
